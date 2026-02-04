@@ -1,7 +1,12 @@
 from fastapi import FastAPI, Header, HTTPException
 import requests
 
-API_KEY = "my_voice_api_key_2026"
+app = FastAPI(
+    title="AI Generated Voice Detection API",
+    docs_url="/docs",
+    openapi_url="/openapi.json"
+)
+
 
 app = FastAPI()
 
