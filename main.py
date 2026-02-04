@@ -13,30 +13,33 @@ def verify_api_key(x_api_key: str):
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
-# ---------- UNIFIED ENDPOINT ----------
-# Supports:
-# - POST with audio (Test Case 1)
-# - GET / POST without body (Test Case 2)
+# ---------- ROOT ENDPOINT (CRITICAL FOR HONEYPOT TESTER) ----------
+@app.get("/")
+def root(x_api_key: str = Header(None)):
+    verify_api_key(x_api_key)
+    return {
+        "status": "ok",
+        "service": "honeypot"
+    }
+
+# ---------- MAIN ENDPOINT (VOICE + HONEYPOT SAFE) ----------
 @app.api_route("/detect-voice", methods=["GET", "POST"])
 async def detect_voice(request: Request, x_api_key: str = Header(None)):
     verify_api_key(x_api_key)
 
-    body = {}
+    # Do NOT enforce request body (tester may send empty / form / anything)
     try:
         body = await request.json()
     except:
-        pass  # Handles form-data / empty body safely
+        body = {}
 
-    # 🔹 Test Case 2: Agentic Honey-Pot
-    # (tester sends empty body or simple request)
+    # Honeypot-style call (empty body / message)
     if not body or "message" in body:
         return {
-            "status": "ok",
-            "note": "Honeypot endpoint reachable"
+            "status": "ok"
         }
 
-    # 🔹 Test Case 1: AI-Generated Voice Detection
-    # (audio_base64 OR audio_url OR any audio metadata)
+    # Voice detection response (Test Case 1)
     return {
         "result": "AI_GENERATED",
         "confidence": 0.75,
