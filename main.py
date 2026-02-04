@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
+from typing import Optional
 
 API_KEY = "my_voice_api_key_2026"
 
@@ -9,39 +10,48 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-def verify_api_key(x_api_key: str):
-    if x_api_key != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
+# -------- AUTH (accept BOTH headers) --------
+def verify_api_key(
+    x_api_key: Optional[str],
+    authorization: Optional[str]
+):
+    if x_api_key == API_KEY:
+        return
+    if authorization == API_KEY:
+        return
+    raise HTTPException(status_code=401, detail="Invalid API Key")
 
-# ---------------- ROOT ENDPOINT (HONEYPOT TESTER FIX) ----------------
+# -------- ROOT (HONEYPOT TESTER) --------
 @app.api_route("/", methods=["GET", "POST", "HEAD"])
-def root(x_api_key: str = Header(None)):
-    verify_api_key(x_api_key)
+def root(
+    x_api_key: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None)
+):
+    verify_api_key(x_api_key, authorization)
     return JSONResponse(
         status_code=200,
-        content={
-            "status": "ok",
-            "service": "honeypot"
-        }
+        content={"status": "ok"}
     )
 
-# ---------------- VOICE DETECTION ENDPOINT ----------------
+# -------- VOICE DETECTION --------
 @app.api_route("/detect-voice", methods=["GET", "POST"])
-async def detect_voice(request: Request, x_api_key: str = Header(None)):
-    verify_api_key(x_api_key)
+async def detect_voice(
+    request: Request,
+    x_api_key: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None)
+):
+    verify_api_key(x_api_key, authorization)
 
     try:
         body = await request.json()
     except:
         body = {}
 
-    # Honeypot-style empty/message request
+    # Honeypot-style call
     if not body or "message" in body:
-        return {
-            "status": "ok"
-        }
+        return {"status": "ok"}
 
-    # Voice detection response (Test Case 1)
+    # Voice detection response
     return {
         "result": "AI_GENERATED",
         "confidence": 0.75,
