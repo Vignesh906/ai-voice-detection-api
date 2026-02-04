@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+pydub
+librosa
+numpy
+soundfile
