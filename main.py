@@ -31,4 +31,4 @@ def detect_voice(payload: dict, x_api_key: str = Header(None)):
         }
 
     # ❌ Anything else
-    r
+    raise HTTPException(status_code=400, detail="Invalid request body")
